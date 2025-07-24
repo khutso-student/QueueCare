@@ -21,9 +21,9 @@ exports.signup = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(201).json({
+   res.status(201).json({
       token,
-      user: { id: user._id, name: user.name, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Signup Error:", error.message);
@@ -50,7 +50,7 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       token,
-      user: { id: user._id, name: user.name, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Login Error:", error.message);

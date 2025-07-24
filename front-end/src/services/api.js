@@ -3,6 +3,7 @@ import axios from "axios";
 // Create an Axios instance
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
+  withCredentials: true,
 });
 
 // Automatically attach token to every request (if exists)
@@ -36,3 +37,5 @@ export const forgotPassword = async (data) => {
 export const resetPassword = (token, newPassword) => {
   return axios.post(`/api/reset-password/${token}`, { password: newPassword });
 };
+
+
