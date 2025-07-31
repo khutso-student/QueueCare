@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { MdOutlineEmail } from "react-icons/md";
 import { CiLock } from "react-icons/ci";
+import Logo from '../assets/Logo.svg';
 
 export default function Login() {
   const [error, setError] = useState("");
@@ -33,7 +34,13 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-2">
+      <div className="flex justify-center w-full mb-4">
+        <img src={Logo} className="w-40" alt="" />
+      </div>
+      <h1 className="text-sm text-center text-[#7a7777] mb-4">
+        <span className="font-bold">Login</span> to your account and manage your daily and weekly queues effortlessly
+      </h1>
       <div className="bg-white shadow-lg p-5 rounded-lg w-72">
         <h2 className="text-2xl text-[#424242] font-bold mb-5 text-center">Login</h2>
 
@@ -113,7 +120,17 @@ export default function Login() {
             </Link>
           </p>
         </form>
+        <div className="flex flex-col justify-center items-center w-full mt-4">
+        <h1 className="text-xs text-[#363636] font-bold mb-2">Demo Accounts - Admin & User</h1>
+        <p className="text-sm text-[#525252]">mern.dev@gmail.com -- mern123</p>
+        <p className="text-sm text-[#525252]">khutso@gmail.com -- Khutso123</p>
+        </div>
       </div>
+        <footer>
+        <p className="text-[#686666] text-sm mt-5">
+          &copy; {new Date().getFullYear()} QueueCare. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

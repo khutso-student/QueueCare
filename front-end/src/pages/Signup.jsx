@@ -5,6 +5,8 @@ import { AuthContext } from "../context/AuthContext";
 import { RiUser6Line } from "react-icons/ri";
 import { MdOutlineEmail } from "react-icons/md";
 import { CiLock } from "react-icons/ci";
+import SignLogo from '../assets/Logo.svg';
+import { IoIosArrowBack } from "react-icons/io";
 
 export default function Signup() {
   const [error, setError] = useState("");
@@ -34,7 +36,19 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-100 p-2">
+      <div className="absolute top-2 w-full py-2 px-4">
+          <Link to="/"
+          className="bg-[#1fbec3da] hover:bg-[#1fbec38f] flex justify-center items-center w-8 h-8 rounded-full p-2 hover:animate-spin">
+            <IoIosArrowBack className="text-white" />
+        </Link>
+      </div>
+      <div className="flex justify-center w-full mb-4">
+        <img src={SignLogo} className="w-40" alt="" />
+      </div>
+      <h1 className="text-sm text-center text-[#7a7777] mb-4">
+        <span className="font-bold">SignUp</span> and manage your daily and weekly queues effortlessly
+      </h1>
       <div className="bg-white shadow-lg p-5 rounded-lg w-72">
         <h2 className="text-2xl text-[#424242] font-bold mb-5 text-center">Sign Up</h2>
 
@@ -109,6 +123,11 @@ export default function Signup() {
           </p>
         </form>
       </div>
+      <footer>
+        <p className="text-[#686666] text-sm mt-5">
+          &copy; {new Date().getFullYear()} QueueCare. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

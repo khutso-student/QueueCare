@@ -126,8 +126,8 @@ export default function MyProfile() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full h-full">
-      <div className="flex flex-col items-center bg-white w-120 h-90 border border-[#dfdfdf] rounded-lg p-3">
+    <div className="flex flex-col justify-center items-center w-full h-full p-3">
+      <div className="flex flex-col items-center bg-white w-75 sm:w-120 h-90 border border-[#dfdfdf] rounded-lg p-3">
         {/* Banner */}
         <div className="flex justify-center items-center bg-[#1FBEC3] w-full h-30 rounded-lg">
           <h1 className="text-[50px] font-bold text-[#ffffff1a] animate-bounce">
@@ -174,7 +174,7 @@ export default function MyProfile() {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-96 rounded-lg p-6 shadow-md"
+              className="bg-white w-75 sm:w-96 rounded-lg p-6 shadow-md"
             >
               <h2 className="text-lg font-bold mb-4">Edit Profile</h2>
 

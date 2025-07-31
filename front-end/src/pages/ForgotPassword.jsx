@@ -2,6 +2,7 @@ import { useState } from "react";
 import { forgotPassword } from "../services/api";
 import { MdOutlineEmail } from "react-icons/md";
 import { Link } from "react-router-dom";
+import ForgotLogo from '../assets/Logo.svg';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -27,8 +28,14 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-lg p-6 rounded-md w-80">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <div className="flex justify-center w-full mb-4">
+              <img src={ForgotLogo} className="w-40" alt="" />
+        </div>
+        <h1 className="text-sm text-center text-[#7a7777] mb-4">
+         Forgot your password? resert Your Password here
+      </h1>
+      <div className="bg-white shadow-lg p-6 rounded-md w-75 sm:w-80">
         <h2 className="text-2xl font-semibold mb-5 text-center text-gray-700">
           Forgot Password
         </h2>
@@ -92,6 +99,11 @@ export default function ForgotPassword() {
           </p>
         </form>
       </div>
+         <footer>
+        <p className="text-[#686666] text-sm mt-5">
+          &copy; {new Date().getFullYear()} QueueCare. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

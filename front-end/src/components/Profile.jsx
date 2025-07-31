@@ -1,19 +1,28 @@
-import React, { useState } from "react";
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineLogout } from "react-icons/hi";
+import { AuthContext } from '../context/AuthContext'; // adjust path as needed
 
 export default function Profile({ setActiveTab, profileImage }) {
   const [showModel, setShowModel] = useState(false);
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleViewAll = () => {
     setActiveTab("MyProfile");
-    setShowModel(false); // fixed here
+    setShowModel(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowModel(false);
+    navigate('/login'); // redirect after logout
   };
 
   return (
     <div
       onClick={() => setShowModel(!showModel)}
-      className="hidden md:flex justify-center items-center bg-[#000] cursor-pointer w-8 h-8 rounded-full hover:bg-[#535353]"
+      className=" md:flex justify-center items-center bg-[#000] cursor-pointer w-8 h-8 rounded-full hover:bg-[#535353]"
     >
       {profileImage ? (
         <img
@@ -42,13 +51,13 @@ export default function Profile({ setActiveTab, profileImage }) {
             My Profile
           </button>
 
-          <Link
-            to="/login"
+          <button
+            onClick={handleLogout}
             className="flex items-center text-sm text-[#292828] py-2 px-4 mt-2 w-full bg-[#f8f7f7] hover:bg-[#e6e5e5] border border-[#eeeaea] rounded-lg"
           >
             <HiOutlineLogout className="mr-1" />
             Logout
-          </Link>
+          </button>
         </div>
       )}
     </div>
