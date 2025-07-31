@@ -390,7 +390,7 @@ export default function BookAppointments({ pushNotification }) {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white w-[400px] p-6 rounded-lg shadow-lg"
+            className="bg-white w-75 sm:w-[400px] p-6 rounded-lg shadow-lg"
           >
             <h2 className="text-xl font-bold text-center mb-4 text-[#069094]">
               {editBooking ? "Edit Appointment" : "Book Appointment"}

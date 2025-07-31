@@ -54,7 +54,7 @@ export default function Notify({ notifications, setActiveTab }) {
       </div>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-70 bg-white shadow-lg rounded-lg z-50 p-4">
+        <div className="absolute right-0 mt-2 mr-[-75px] sm:mr-[-40px] w-70 border border-[#eeeeee]  bg-white shadow-lg rounded-lg z-50 p-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="font-semibold text-gray-700">Notifications</h2>
             {/* You can keep the Clear All button here if you want */}
