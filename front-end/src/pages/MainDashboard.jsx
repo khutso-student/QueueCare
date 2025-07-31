@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
 
 import Logo from '../assets/Logo.svg';
-import Chat from '../components/Chat';
 import Notify from '../components/Notify';
 import Profile from '../components/Profile';
 
@@ -32,6 +33,55 @@ export default function MainDashboard() {
         : 'text-gray-500 hover:bg-[#1ca0a5] hover:text-white'
     }`;
 
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.log('No token found');
+            return;
+          }
+         const res = await axios.get('http://localhost:5000/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+          console.log('User data from API:', res.data);
+          setUser(res.data);
+        } catch (error) {
+          console.error('Error fetching user info:', error);
+        }
+      };
+
+      fetchUser();
+}, []);
+
+const [notifications, setNotifications] = useState([
+  {
+    id: Date.now(),
+    message: "Welcome! You’ll get live updates here.",
+    createdAt: new Date().toISOString(),
+  },
+]);
+
+
+  const pushNotification = (message) => {
+    const newNotification = {
+      id: Date.now(),
+      message,
+      time: new Date(),
+    };
+
+    setNotifications((prev) => [newNotification, ...prev]);
+};
+
+
+
+
+
   return (
     <div className="flex flex-col w-full h-screen bg-[#f2f6ff] ">
       {/* Top Nav */}
@@ -40,10 +90,22 @@ export default function MainDashboard() {
           <img src={Logo} alt="Site Logo" className="w-35" />
         </a>
 
-        <div>
-          <h1 className="text-[#1FBEC3] font-bold text-lg hidden sm:block">Khutso Makunyane</h1>
-          <p className="text-sm text-[#878080] hidden sm:block">Welcome back <span className='text-[#1FBEC3] cursor-pointer font-bold hover:underline'>Patient</span> </p>
-        </div>
+        {user ? (
+            <div>
+              <h1 className="text-[#1FBEC3] font-bold text-lg hidden sm:block">{user.name || user.username || 'User'}</h1>
+              <p className="text-sm text-[#878080] hidden sm:block">
+                Welcome back <span className='text-[#1FBEC3] cursor-pointer font-bold hover:underline'>{user.role || 'User'}</span>
+              </p>
+            </div>
+            ) : (
+            <div>
+              <h1 className="text-[#1FBEC3] font-bold text-lg hidden sm:block">Loading...</h1>
+              <p className="text-sm text-[#878080] hidden sm:block">Please wait...</p>
+            </div>
+          )}
+
+
+
 
         <div className="w-1/2 p-1 hidden sm:block">
           <input
@@ -54,9 +116,10 @@ export default function MainDashboard() {
         </div>
 
         <div className="flex gap-2">
-          <Chat />
-          <Notify />
-          <Profile />
+         
+          <Notify notifications={notifications}
+                  setActiveTab={setActiveTab}  />
+          <Profile setActiveTab={setActiveTab} profileImage={user?.profileImage || ""} />
           <button
             onClick={() => setOpenMenu(!openMenu)}
             className="flex justify-center items-center bg-[#1FBEC3] hover:bg-[#55979b] cursor-pointer w-8 h-8 rounded-full"
@@ -117,8 +180,8 @@ export default function MainDashboard() {
         {/* Main Content Area */}
         <div className="flex-1  overflow-y-auto">
           {activeTab === 'Dashboard' && <Dashboard />}
-          {activeTab === 'Notification' && <Notification />}
-          {activeTab === 'BookAppointments' && <BookAppointments />}
+          {activeTab === 'Notification' && <Notification notifications={notifications} />}
+          {activeTab === 'BookAppointments' && <BookAppointments pushNotification={pushNotification} />}
           {activeTab === 'BookingStatus' && <BookingStatus />}
           {activeTab === 'MyProfile' && <MyProfile />}
         </div>
@@ -126,3 +189,5 @@ export default function MainDashboard() {
     </div>
   );
 }
+
+

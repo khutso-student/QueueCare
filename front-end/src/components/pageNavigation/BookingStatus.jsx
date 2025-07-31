@@ -39,7 +39,7 @@ export default function BookingStatus() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center mb-6 text-[#655E5E]">Booking Status</h2>
+      <h2 className="text-xl font-bold  mb-6 text-[#655E5E]">Booking Status</h2>
 
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -50,7 +50,7 @@ export default function BookingStatus() {
           {bookings.map((booking) => (
             <div
               key={booking._id}
-              className="bg-white shadow-md rounded-xl p-4 border border-[#bebdbd] hover:shadow-sm transition"
+              className="bg-white shadow-xs rounded-xl p-4 border border-[#bebdbd] hover:shadow-sm transition"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                 <div className="space-y-1">

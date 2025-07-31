@@ -105,7 +105,14 @@ router.get('/weekly-appointments', async (req, res) => {
   }
 });
 
+
 module.exports = router;
+
+
+
+
+
+
 
 
 

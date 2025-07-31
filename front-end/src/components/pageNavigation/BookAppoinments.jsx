@@ -50,7 +50,7 @@ const formatDate = (dateString) => {
 };
 
 
-export default function BookAppointments() {
+export default function BookAppointments({ pushNotification }) {
   const [showBook, setShowBook] = useState(false);
   const [editBooking, setEditBooking] = useState(null);
   const [formData, setFormData] = useState({
@@ -140,6 +140,7 @@ export default function BookAppointments() {
             ...formData,
             date: new Date(formData.date).toISOString(),
         });
+        pushNotification("Your appointment has been updated.");
 
       } else {
         if (!isPatient) {
@@ -153,6 +154,7 @@ export default function BookAppointments() {
       }
       closeModal();
       fetchBookings();
+      pushNotification("Your appointment has been booked successfully.");
     } catch (err) {
       console.error("Booking failed", err);
     }
@@ -163,6 +165,7 @@ export default function BookAppointments() {
     try {
       await updateBookingStatus(id, { status });  // <-- fixed here
       fetchBookings();
+      pushNotification(`Appointment status changed to ${status}`);
     } catch (err) {
       console.error("Error updating status", err);
     }
@@ -173,6 +176,7 @@ export default function BookAppointments() {
     try {
       await deleteBooking(id);
       fetchBookings();
+      pushNotification("Appointment has been deleted.");
     } catch (err) {
       console.error("Error deleting booking", err);
     }

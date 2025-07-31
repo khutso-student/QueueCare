@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
 
   resetToken: { type: String, default: null },
   resetTokenExpiry: { type: Date, default: null },
+
+  profileImage: { type: String,  default: "",},
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
