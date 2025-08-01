@@ -14,6 +14,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'https://queuecare.onrender.com',
+  'https://queue-care-swart.vercel.app/',
 ];
 
 const corsOptions = {
