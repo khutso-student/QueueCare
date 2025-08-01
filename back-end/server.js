@@ -6,39 +6,34 @@ const userRoutes = require('./routes/userRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const dashboardRoute = require('./routes/dashboardRoute');
 const authRoute = require('./routes/authRoute');
-const uploadRoutes = require('./routes/upload');
+const uploadRoutes = require("./routes/upload");
 
-dotenv.config();
+dotenv.config();  
 connectDB();
 
-// ✅ Allowed frontend origins (Vercel, localhost)
 const allowedOrigins = [
   'http://localhost:5173',
   'https://queuecare.onrender.com',
-  'https://queue-care-swart.vercel.app' // ✅ No trailing slash!
+  'https://queue-care-swart.vercel.app/',
 ];
 
-// ✅ CORS Options with function origin check
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed from this origin'));
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
     }
+    return callback(null, true);
   },
   credentials: true,
 };
 
 const app = express();
 
-// ✅ Apply CORS middleware globally
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests
-
 app.use(express.json());
 
-// ✅ Routes
 app.use("/api/users", userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/dashboard', dashboardRoute); 
