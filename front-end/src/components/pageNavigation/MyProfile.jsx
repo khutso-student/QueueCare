@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../services/api"; // Your centralized axios instance
+import api from '../../services/api'; // Your centralized axios instance
 
 export default function MyProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user"));

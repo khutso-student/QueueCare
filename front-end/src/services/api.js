@@ -3,12 +3,13 @@ import axios from "axios";
 // Create an Axios instance
 const api = axios.create({
   baseURL: import.meta.env.PROD
-  ? import.meta.env.VITE_API_URL
-  : import.meta.env.VITE_API_URL_LOCAL,
+    ? import.meta.env.VITE_API_URL
+    : import.meta.env.VITE_API_URL_LOCAL,
   withCredentials: true,
 });
 
-// Automatically attach token to every request (if exists)
+console.log("API base URL:", import.meta.env.PROD ? import.meta.env.VITE_API_URL : import.meta.env.VITE_API_URL_LOCAL);
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -39,4 +40,3 @@ export const forgotPassword = async (data) => {
 export const resetPassword = (token, newPassword) => {
   return api.post(`/users/reset-password/${token}`, { password: newPassword });
 };
-

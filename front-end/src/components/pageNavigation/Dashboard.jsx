@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
-import { getDashboardData } from '../services/dashboardAPI'; // ✅ NEW import
+import { getDashboardData } from '../../services/bookingAPI'; // ✅ NEW import
 import SystemGraph from '../SystemGraph';
 
-import {
-  LuLayoutList,
-  GoChecklist,
-  CiCircleList,
-  MdOutlineFilterListOff,
-  TiTick,
-  FaUserClock,
-  MdOutlineCancel,
-  RiUserShared2Line,
-  FaUserDoctor,
-  FaUser,
-  GoGraph,
-  BsGraphDown,
-} from 'react-icons/all';
+import { LuLayoutList } from "react-icons/lu";
+import { GoChecklist, GoGraph } from "react-icons/go";
+import { CiCircleList } from "react-icons/ci";
+import { MdOutlineFilterListOff, MdOutlineCancel } from "react-icons/md";
+import { TiTick } from "react-icons/ti";
+import { FaUserClock} from "react-icons/fa";
+import { FaUserMd, FaUser } from "react-icons/fa";
+import { RiUserShared2Line } from "react-icons/ri";
+import { BsGraphDown } from "react-icons/bs";
+
 
 const StatCard = ({ icon, label, value, bgColor, iconColor }) => (
   <div className="flex flex-col justify-center items-center gap-2 bg-white border border-[#D9D2D2] hover:shadow-sm rounded-lg w-full sm:w-1/2 lg:w-[23%] py-3 px-2">
@@ -126,7 +122,7 @@ export default function Dashboard() {
         <UserCard
           bgColor="#9AE1E4"
           iconColor="#1FBEC3"
-          icon={<FaUserDoctor />}
+          icon={<FaUserMd />}
           label="Total Number of doctors"
           value={stats.totalDoctors}
           lineChat={<GoGraph className="text-[#1FBEC3]" />}
