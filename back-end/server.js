@@ -18,18 +18,23 @@ const allowedOrigins = [
   'https://queue-care-swart.vercel.app' // ✅ No trailing slash!
 ];
 
-// ✅ CORS Options
+// ✅ CORS Options with function origin check
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed from this origin'));
+    }
+  },
   credentials: true,
 };
 
-// ✅ Create express app
 const app = express();
 
-// ✅ Apply CORS middleware
+// ✅ Apply CORS middleware globally
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // 🛡️ Handle preflight requests
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use(express.json());
 
@@ -40,6 +45,5 @@ app.use('/api/dashboard', dashboardRoute);
 app.use('/api/auth', authRoute);
 app.use("/api/uploads", uploadRoutes);
 
-// ✅ Server listen
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
