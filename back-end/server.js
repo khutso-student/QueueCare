@@ -14,7 +14,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'https://queuecare.onrender.com',
-  'https://queue-care-swart.vercel.app/',
+  'https://queue-care-swart.vercel.app',
 ];
 
 const corsOptions = {
@@ -32,6 +32,7 @@ const corsOptions = {
 const app = express();
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable preflight for all routes
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
