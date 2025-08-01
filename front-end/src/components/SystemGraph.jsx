@@ -24,7 +24,7 @@ export default function SystemGraph() {
   useEffect(() => {
     async function fetchWeeklyAppointments() {
       try {
-        const { data } =  await api.get('/api/dashboard/weekly-appointments', {
+        const { data } =  await api.get('/dashboard/weekly-appointments', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         // Expect data format: [{ day: 'Mon', appointments: 10 }, ...]
