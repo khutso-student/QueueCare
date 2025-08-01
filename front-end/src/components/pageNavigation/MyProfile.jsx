@@ -1,72 +1,73 @@
 import React, { useState, useEffect } from "react";
+import api from "../services/api"; // Your centralized axios instance
 
 export default function MyProfile() {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        const userId = storedUser?.id;
-        console.log("Stored user:", storedUser);
-        console.log("User ID:", userId);
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const userId = storedUser?.id;
 
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        const [showModel, setShowModel] = useState(false);
-        const [selectedImage, setSelectedImage] = useState(null);
-        const [previewImage, setPreviewImage] = useState("");
-        const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    role: "",
+    profileImage: "",
+  });
 
-        const [user, setUser] = useState({
-        name: "",
-        email: "",
-        role: "",
-        profileImage: "",
-        });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+    profileImage: "",
+  });
 
-        const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        role: "",
-        profileImage: "",
-        });
+  // Fetch user profile on mount
+  useEffect(() => {
+    if (!userId) {
+      console.error("No user ID found in localStorage");
+      return;
+    }
 
+    const fetchUser = async () => {
+      try {
+        const res = await api.get(`/users/${userId}`);
+        const data = res.data;
+        if (data) {
+          setUser(data);
+          setFormData(data);
+          setPreviewImage(data.profileImage);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
 
-    
+    fetchUser();
+  }, [userId]);
 
-  // 🔁 Fetch user profile on mount
-        useEffect(() => {
-            const fetchUser = async () => {
-            try {
-                const res = await fetch(`http://localhost:5000/api/users/${userId}`);
-                const data = await res.json();
-                if (data) {
-                setUser(data);
-                setFormData(data);
-                setPreviewImage(data.profileImage);
-                }
-            } catch (err) {
-                console.error("Failed to fetch user:", err);
-            }
-            };
+  // Clean up preview URL on selectedImage change to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewImage && selectedImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage, selectedImage]);
 
-            if (userId) {
-            fetchUser();
-            } else {
-            console.error("No user ID found in localStorage");
-            }
-        }, [userId]);
-
-  // 📤 Upload profile image
+  // Upload profile image
   const handleUpload = async () => {
     if (!selectedImage || !userId) return;
 
-    const formData = new FormData();
-    formData.append("image", selectedImage);
+    const uploadData = new FormData();
+    uploadData.append("image", selectedImage);
 
     try {
       setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/uploads/upload-profile/${userId}`, {
-          method: "POST",
-          body: formData,
-        });
-
-      const data = await res.json();
+      const res = await api.post(`/uploads/upload-profile/${userId}`, uploadData);
+      const data = res.data;
       if (data.user) {
         setUser(data.user);
         setPreviewImage(data.user.profileImage);
@@ -80,10 +81,9 @@ export default function MyProfile() {
     }
   };
 
-  // ✅ Save profile
+  // Save profile handler
   const handleSave = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
 
@@ -93,21 +93,14 @@ export default function MyProfile() {
 
       const { name, email, role } = formData;
 
-      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, role }),
-      });
-
-      const updatedUser = await res.json();
-      console.log("Updated user from server:", updatedUser);
+      const res = await api.put(`/users/${userId}`, { name, email, role });
+      const updatedUser = res.data;
 
       setUser(updatedUser);
       setFormData(updatedUser);
       setPreviewImage(updatedUser.profileImage);
-      setShowModel(false);
+      setShowModal(false);
+      setSelectedImage(null);
     } catch (err) {
       console.error("Failed to update profile:", err);
       alert("Failed to update profile.");
@@ -116,7 +109,7 @@ export default function MyProfile() {
     }
   };
 
-  // 📥 Form input handler
+  // Form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -138,7 +131,11 @@ export default function MyProfile() {
         {/* Profile Image */}
         <div className="bg-black w-30 h-30 rounded-full border-8 border-[#ffffff] relative mt-[-55px] overflow-hidden">
           {user?.profileImage ? (
-            <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            <img
+              src={user.profileImage}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-gray-300"></div>
           )}
@@ -147,19 +144,19 @@ export default function MyProfile() {
         {/* Profile Info */}
         <p className="text-[#686161] mb-1">{user.name}</p>
         <h2 className="text-[#686161] mb-1 font-semibold">{user.email}</h2>
-       <h1 className="text-[#686161] text-xl mb-1 font-bold">
-          {typeof user.role === 'string' && user.role.length > 0
+        <h1 className="text-[#686161] text-xl mb-1 font-bold">
+          {typeof user.role === "string" && user.role.length > 0
             ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
             : ""}
         </h1>
-
 
         {/* Edit Button */}
         <button
           onClick={() => {
             setFormData(user);
             setPreviewImage(user.profileImage);
-            setShowModel(true);
+            setSelectedImage(null);
+            setShowModal(true);
           }}
           className="bg-[#1FBEC3] hover:bg-[#529092] text-white text-sm rounded-md py-1.5 px-4 mt-2"
         >
@@ -167,9 +164,9 @@ export default function MyProfile() {
         </button>
 
         {/* Modal */}
-        {showModel && (
+        {showModal && (
           <div
-            onClick={() => setShowModel(false)}
+            onClick={() => setShowModal(false)}
             className="fixed top-0 left-0 w-full h-full bg-[#000000af] flex justify-center items-center z-50"
           >
             <div
@@ -224,13 +221,18 @@ export default function MyProfile() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold mb-1">Upload Profile Image</label>
+                  <label className="text-sm font-semibold mb-1">
+                    Upload Profile Image
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      setSelectedImage(e.target.files[0]);
-                      setPreviewImage(URL.createObjectURL(e.target.files[0]));
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSelectedImage(file);
+                        setPreviewImage(URL.createObjectURL(file));
+                      }
                     }}
                     className="text-sm"
                   />
@@ -247,7 +249,7 @@ export default function MyProfile() {
                 <div className="flex justify-end space-x-2 mt-4">
                   <button
                     type="button"
-                    onClick={() => setShowModel(false)}
+                    onClick={() => setShowModal(false)}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
                   >
                     Cancel
@@ -255,6 +257,7 @@ export default function MyProfile() {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-[#1FBEC3] text-white rounded hover:bg-[#14888c]"
+                    disabled={loading}
                   >
                     {loading ? "Saving..." : "Save"}
                   </button>

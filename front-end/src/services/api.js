@@ -2,7 +2,9 @@ import axios from "axios";
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.PROD
+  ? import.meta.env.VITE_API_URL
+  : import.meta.env.VITE_API_URL_LOCAL,
   withCredentials: true,
 });
 
@@ -35,7 +37,6 @@ export const forgotPassword = async (data) => {
 };
 
 export const resetPassword = (token, newPassword) => {
-  return axios.post(`/api/reset-password/${token}`, { password: newPassword });
+  return api.post(`/users/reset-password/${token}`, { password: newPassword });
 };
-
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api'
 
 import Logo from '../assets/Logo.svg';
 import LogoIcon from '../assets/Icon.svg';
@@ -32,17 +32,12 @@ export default function MainDashboard() {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.get('/auth/me'); 
         setUser(res.data);
       } catch (error) {
         console.error('Error fetching user info:', error);
       }
     };
-
     fetchUser();
   }, []);
 

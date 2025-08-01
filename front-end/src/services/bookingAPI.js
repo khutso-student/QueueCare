@@ -49,3 +49,13 @@ export const deleteBooking = async (id) => {
     throw error;
   }
 };
+
+export const getDashboardData = async () => {
+  try {
+    const response = await api.get('/dashboard'); // ✅ fixed here
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    throw error;
+  }
+};

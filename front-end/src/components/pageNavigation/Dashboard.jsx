@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getDashboardData } from '../services/dashboardAPI'; // ✅ NEW import
 import SystemGraph from '../SystemGraph';
 
-import { LuLayoutList } from "react-icons/lu";
-import { GoChecklist } from "react-icons/go";
-import { CiCircleList } from "react-icons/ci";
-import { MdOutlineFilterListOff } from "react-icons/md";
-import { TiTick } from "react-icons/ti";
-import { FaUserClock } from "react-icons/fa";
-import { MdOutlineCancel } from "react-icons/md";
-import { RiUserShared2Line } from "react-icons/ri";
-import { FaUserDoctor } from "react-icons/fa6";
-import { FaUser } from "react-icons/fa6";
-import { GoGraph } from "react-icons/go";
-import { BsGraphDown } from "react-icons/bs";
+import {
+  LuLayoutList,
+  GoChecklist,
+  CiCircleList,
+  MdOutlineFilterListOff,
+  TiTick,
+  FaUserClock,
+  MdOutlineCancel,
+  RiUserShared2Line,
+  FaUserDoctor,
+  FaUser,
+  GoGraph,
+  BsGraphDown,
+} from 'react-icons/all';
 
 const StatCard = ({ icon, label, value, bgColor, iconColor }) => (
   <div className="flex flex-col justify-center items-center gap-2 bg-white border border-[#D9D2D2] hover:shadow-sm rounded-lg w-full sm:w-1/2 lg:w-[23%] py-3 px-2">
@@ -36,7 +38,7 @@ const UserCard = ({ icon, label, value, bgColor, iconColor, lineChat }) => (
     </div>
     <div className="flex-1">
       <p className="text-xs text-[#979191]">{label}</p>
-      <div className='flex items-center gap-2'>
+      <div className="flex items-center gap-2">
         <h1 className="text-[#686161] font-bold">{value}</h1>
         <div>{lineChat}</div>
       </div>
@@ -44,7 +46,6 @@ const UserCard = ({ icon, label, value, bgColor, iconColor, lineChat }) => (
   </div>
 );
 
-// Map backend icons strings to actual react-icons components
 const activityIconMap = {
   approved: <TiTick className="text-green-500" />,
   pending: <FaUserClock className="text-[#1FBEC3]" />,
@@ -56,7 +57,7 @@ const statusBadgeColors = {
   Approved: { bg: 'bg-green-100', text: 'text-green-600' },
   Pending: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
   Rejected: { bg: 'bg-red-100', text: 'text-red-600' },
-  Cancelled: { bg: 'bg-red-100', text: 'text-red-600' }, // In case your data uses Cancelled
+  Cancelled: { bg: 'bg-red-100', text: 'text-red-600' },
 };
 
 export default function Dashboard() {
@@ -72,62 +73,35 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await axios.get('/api/dashboard', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setStats(data);
+        const dashboardData = await getDashboardData(); // ✅ using service
+        setStats(dashboardData);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       }
     };
 
-    fetchDashboardData();
+    fetchData();
   }, []);
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 w-full h-full p-2 overflow-y-auto">
-      {/* Left */}
+      {/* Quick Stats */}
       <div className="flex flex-col w-full lg:w-3/4 gap-4 h-auto">
         <p className="text-[#686161] text-xs font-semibold ml-1">QUICK STATS</p>
         <div className="w-full h-auto overflow-x-auto scrollbar-hide mb-2 ">
           <div className="flex justify-between gap-3 flex-nowrap min-w-max">
-            <StatCard
-              icon={<LuLayoutList />}
-              label="Total Appointments"
-              value={stats.totalAppointments}
-              bgColor="#1FBEC3"
-              iconColor="#fff"
-            />
-            <StatCard
-              icon={<CiCircleList />}
-              label="Total Queues"
-              value={stats.totalQueues}
-              bgColor="#F193FF"
-              iconColor="#E32BFF"
-            />
-            <StatCard
-              icon={<GoChecklist />}
-              label="Approved Appointments"
-              value={stats.approved}
-              bgColor="#B2FFB7"
-              iconColor="#61DA6A"
-            />
-            <StatCard
-              icon={<MdOutlineFilterListOff />}
-              label="Rejected Appointments"
-              value={stats.rejected}
-              bgColor="#FED0D0"
-              iconColor="#FB5959"
-            />
+            <StatCard icon={<LuLayoutList />} label="Total Appointments" value={stats.totalAppointments} bgColor="#1FBEC3" iconColor="#fff" />
+            <StatCard icon={<CiCircleList />} label="Total Queues" value={stats.totalQueues} bgColor="#F193FF" iconColor="#E32BFF" />
+            <StatCard icon={<GoChecklist />} label="Approved Appointments" value={stats.approved} bgColor="#B2FFB7" iconColor="#61DA6A" />
+            <StatCard icon={<MdOutlineFilterListOff />} label="Rejected Appointments" value={stats.rejected} bgColor="#FED0D0" iconColor="#FB5959" />
           </div>
         </div>
 
         <SystemGraph />
 
+        {/* Recent Activity */}
         <p className="text-[#686161] text-xs font-semibold ml-1 mt-4">RECENT ACTIVITY FEED</p>
         <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
           {stats.recentActivities.length === 0 ? (
@@ -146,7 +120,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Right */}
+      {/* Right Column: Users + Upcoming */}
       <div className="w-full lg:w-1/4">
         <p className="text-[#686161] text-xs font-semibold mb-2 ml-1">TOTAL USERS</p>
         <UserCard
@@ -155,16 +129,15 @@ export default function Dashboard() {
           icon={<FaUserDoctor />}
           label="Total Number of doctors"
           value={stats.totalDoctors}
-          lineChat={<GoGraph className='text-[#1FBEC3]' />}
+          lineChat={<GoGraph className="text-[#1FBEC3]" />}
         />
-
         <UserCard
           bgColor="#FED0D0"
           iconColor="#FB5959"
           icon={<FaUser />}
           label="Total Number of Patients"
           value={stats.totalPatients}
-          lineChat={<BsGraphDown className='text-red-500' />}
+          lineChat={<BsGraphDown className="text-red-500" />}
         />
 
         <p className="text-[#686161] text-xs font-semibold my-3 ml-1">UPCOMING APPOINTMENTS</p>
@@ -186,11 +159,13 @@ export default function Dashboard() {
                     <div>
                       <p className="text-sm text-gray-700 font-semibold">{appt.fullName}</p>
                       <p className="text-xs text-gray-500">{`Dr. ${appt.doctorName || appt.department} — ${appt.department}`}</p>
-                      <p className="text-xs text-gray-400">{new Date(appt.date).toLocaleDateString(undefined, {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })} — {appt.session} Session</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(appt.date).toLocaleDateString(undefined, {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })} — {appt.session} Session
+                      </p>
                     </div>
                   </div>
                   <span className={`text-xs ${badgeColors.bg} ${badgeColors.text} px-2 py-1 rounded-full`}>

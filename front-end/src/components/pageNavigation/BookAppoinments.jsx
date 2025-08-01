@@ -137,28 +137,31 @@ export default function BookAppointments({ pushNotification }) {
           return;
         }
         await updateBooking(editBooking._id, {
-            ...formData,
-            date: new Date(formData.date).toISOString(),
+          ...formData,
+          date: new Date(formData.date).toISOString(),
         });
-        pushNotification("Your appointment has been updated.");
 
+        pushNotification("Your appointment has been updated.");
       } else {
         if (!isPatient) {
           alert("Only patients can book appointments.");
           return;
         }
         await createBooking({
-            ...formData,
-            date: new Date(formData.date).toISOString(),
+          ...formData,
+          date: new Date(formData.date).toISOString(),
         });
+
+        pushNotification("Your appointment has been booked successfully.");
       }
+
       closeModal();
       fetchBookings();
-      pushNotification("Your appointment has been booked successfully.");
     } catch (err) {
       console.error("Booking failed", err);
     }
   };
+
 
   const handleStatusChange = async (id, status) => {
     if (!isDoctor) return alert("Only doctors can update status.");

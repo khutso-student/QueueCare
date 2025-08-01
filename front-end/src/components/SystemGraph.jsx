@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts';
-import axios from 'axios';
+import api from '../services/api';
 
 export default function SystemGraph() {
   const [data, setData] = useState([]);
@@ -24,7 +24,7 @@ export default function SystemGraph() {
   useEffect(() => {
     async function fetchWeeklyAppointments() {
       try {
-        const { data } = await axios.get('/api/dashboard/weekly-appointments', {
+        const { data } =  await api.get('/api/dashboard/weekly-appointments', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         // Expect data format: [{ day: 'Mon', appointments: 10 }, ...]

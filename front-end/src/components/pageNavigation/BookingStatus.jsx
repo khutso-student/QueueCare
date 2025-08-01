@@ -1,23 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getAllBookings } from '../../services/bookingAPI'; // Reusing your service function
 
 export default function BookingStatus() {
-
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const { data } = await axios.get('/api/bookings', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-            });
-            console.log('Raw bookings response:', data);
-            setBookings(Array.isArray(data) ? data : data.bookings || []);
-
-      
+        const data = await getAllBookings(); // ✅ Replaced axios with helper
+        console.log('Raw bookings response:', data);
+        setBookings(Array.isArray(data) ? data : data.bookings || []);
       } catch (error) {
         console.error('Failed to load bookings:', error);
       } finally {
@@ -39,7 +32,7 @@ export default function BookingStatus() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h2 className="text-xl font-bold  mb-6 text-[#655E5E]">Booking Status</h2>
+      <h2 className="text-xl font-bold mb-6 text-[#655E5E]">Booking Status</h2>
 
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -59,7 +52,9 @@ export default function BookingStatus() {
                   <p className="text-sm text-gray-500">
                     {booking.department} — {booking.session} Session
                   </p>
-                  <p className="text-sm text-gray-500">{new Date(booking.date).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(booking.date).toLocaleDateString()}
+                  </p>
                 </div>
 
                 <div className="mt-4 md:mt-0 flex flex-col gap-2 items-start md:items-end">
@@ -73,7 +68,7 @@ export default function BookingStatus() {
 
                   {booking.queueNumber && (
                     <p className="text-sm text-gray-700">
-                        Queue: Line {booking.queueLine} • No. {booking.queueNumber}
+                      Queue: Line {booking.queueLine} • No. {booking.queueNumber}
                     </p>
                   )}
                 </div>
@@ -84,12 +79,4 @@ export default function BookingStatus() {
       )}
     </div>
   );
-
-
 }
-
-
-
-
-
-
