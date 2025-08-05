@@ -2,18 +2,50 @@ const Booking = require("../models/Booking.js");
 const User = require("../models/User.js");
 const Notification = require("../models/Notification");
 
+// Departments list for validation
+const validDepartments = [
+  "General Consultation",
+  "Dentistry",
+  "Cardiology",
+  "Dermatology",
+  "ENT (Ear, Nose, Throat)",
+  "Gynecology",
+  "Pediatrics",
+  "Orthopedics",
+  "Ophthalmology (Eyes)",
+  "Neurology",
+  "Oncology",
+  "Radiology",
+  "Urology",
+  "Gastroenterology",
+  "Psychiatry",
+  "Physiotherapy",
+  "Nutrition & Dietetics",
+  "Pulmonology",
+  "Nephrology",
+  "Emergency",
+  "Infectious Diseases",
+];
+
+const isValidDepartment = (department) => validDepartments.includes(department);
+
 const getDoctorByDepartment = async (department) => {
   return await User.findOne({ role: "doctor", department });
 };
 
 // Create a booking
-
 const createBooking = async (req, res) => {
+    console.log("Create Booking request body:", req.body);
+    console.log("Authenticated user:", req.user);
   try {
     const { fullName, email, department, session, date } = req.body;
 
     if (!date) {
       return res.status(400).json({ message: "Date is required" });
+    }
+
+    if (!department || !isValidDepartment(department)) {
+      return res.status(400).json({ message: "Invalid or missing department" });
     }
 
     // Find doctor by department
@@ -28,10 +60,10 @@ const createBooking = async (req, res) => {
       department,
       session,
       date: new Date(date),
-      status: 'Pending',
+      status: "Pending",
       createdBy: req.user._id,
-      doctorId: doctor._id,      // Save doctorId in booking for reference
-      patientId: req.user._id,   // Save patientId (creator) in booking
+      doctorId: doctor._id, // Save doctorId in booking for reference
+      patientId: req.user._id, // Save patientId (creator) in booking
     });
 
     await newBooking.save();
@@ -50,8 +82,6 @@ const createBooking = async (req, res) => {
   }
 };
 
-
-
 // Get all bookings
 const getAllBookings = async (req, res) => {
   try {
@@ -65,7 +95,7 @@ const getAllBookings = async (req, res) => {
       bookings = await Booking.find()
         .sort({ createdAt: -1 })
         .populate("createdBy", "name email");
-    } else if (userRole === 'patient') {
+    } else if (userRole === "patient") {
       // Patients see only their own bookings
       bookings = await Booking.find({ createdBy: userId })
         .sort({ createdAt: -1 })
@@ -79,8 +109,6 @@ const getAllBookings = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch bookings" });
   }
 };
-
-
 
 // Get booking by ID
 const getBookingById = async (req, res) => {
@@ -105,11 +133,11 @@ const updateBookingStatus = async (req, res) => {
 
     booking.status = status;
 
-    if (status === 'Approved') {
-      booking.queueLine = booking.session === 'Afternoon' ? 2 : 1;
+    if (status === "Approved") {
+      booking.queueLine = booking.session === "Afternoon" ? 2 : 1;
 
       const existingApprovedCount = await Booking.countDocuments({
-        status: 'Approved',
+        status: "Approved",
         date: booking.date,
         session: booking.session,
         department: booking.department,
@@ -122,7 +150,7 @@ const updateBookingStatus = async (req, res) => {
 
     // Notify the patient about status update
     await Notification.create({
-      userId: booking.patientId,  // Patient's userId stored in booking
+      userId: booking.patientId, // Patient's userId stored in booking
       bookingId: updatedBooking._id,
       message: `Your appointment for ${booking.department} has been ${booking.status}.`,
     });
@@ -134,11 +162,14 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-
 // Update booking details (except status)
 const updateBooking = async (req, res) => {
   try {
     const { fullName, email, department, session, date } = req.body;
+
+    if (department && !isValidDepartment(department)) {
+      return res.status(400).json({ message: "Invalid department" });
+    }
 
     const booking = await Booking.findById(req.params.id);
     if (!booking) return res.status(404).json({ message: "Booking not found" });
@@ -164,8 +195,6 @@ const updateBooking = async (req, res) => {
     res.status(500).json({ message: "Failed to update booking" });
   }
 };
-
-
 
 // Delete a booking
 const deleteBooking = async (req, res) => {
