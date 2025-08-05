@@ -37,6 +37,12 @@ const getDoctorByDepartment = async (department) => {
 const createBooking = async (req, res) => {
     console.log("Create Booking request body:", req.body);
     console.log("Authenticated user:", req.user);
+
+      if (!req.user) {
+    console.log("No authenticated user found in request.");
+    return res.status(401).json({ message: "Unauthorized: user not authenticated" });
+  }
+  
   try {
     const { fullName, email, department, session, date } = req.body;
 
