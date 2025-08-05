@@ -22,7 +22,6 @@ import { IoIosLogOut } from "react-icons/io";
 import { SlMenu } from "react-icons/sl";
 import { Link } from 'react-router-dom';
 
-const token = localStorage.getItem("token");
 
 export default function MainDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -30,33 +29,28 @@ export default function MainDashboard() {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
-  
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
 
-        const res = await api.get('/auth/me'); 
-        setUser(res.data);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    };
-    fetchUser();
-  }, []);
+  const token = localStorage.getItem("token");
 
-    const fetchNotifications = async () => {
+  // states...
+
+  const fetchUser = async () => {
+    if (!token) return;
     try {
-      if (!token) return;
+      const res = await api.get('/auth/me');
+      setUser(res.data);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
 
-      const res = await fetch(`https://queuecare.onrender.com/api/notifications`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('https://queuecare.onrender.com/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
 
       if (res.ok) {
@@ -79,23 +73,17 @@ export default function MainDashboard() {
     }
   };
 
-
-
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        if (!token) return;
-
-        const res = await api.get('/auth/me');
-        setUser(res.data);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    };
-
     fetchUser();
-    fetchNotifications();  // call it here on mount
+    fetchNotifications();
+
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
   }, [token]);
+
+
+
+
 
   const pushNotification = (message) => {
     const newNotification = {
