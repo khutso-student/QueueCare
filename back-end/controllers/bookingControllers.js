@@ -1,8 +1,13 @@
 const Booking = require("../models/Booking.js");
 const User = require("../models/User.js");
+const Notification = require("../models/Notification");
+
+const getDoctorByDepartment = async (department) => {
+  return await User.findOne({ role: "doctor", department });
+};
 
 // Create a booking
-// Assuming Express route handler
+
 const createBooking = async (req, res) => {
   try {
     const { fullName, email, department, session, date } = req.body;
@@ -11,18 +16,32 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: "Date is required" });
     }
 
+    // Find doctor by department
+    const doctor = await getDoctorByDepartment(department);
+    if (!doctor) {
+      return res.status(400).json({ message: "Doctor not found for this department" });
+    }
+
     const newBooking = new Booking({
       fullName,
       email,
       department,
       session,
-      date: new Date(date),  // ensure date is Date type
+      date: new Date(date),
       status: 'Pending',
-      // you can set queueNumber and queueLine later on approval
-      createdBy: req.user._id, // if you track who creates the booking
+      createdBy: req.user._id,
+      doctorId: doctor._id,      // Save doctorId in booking for reference
+      patientId: req.user._id,   // Save patientId (creator) in booking
     });
 
     await newBooking.save();
+
+    // Create notification for the doctor (admin)
+    await Notification.create({
+      userId: doctor._id,
+      bookingId: newBooking._id,
+      message: `New appointment booked by ${fullName} for ${department}.`,
+    });
 
     res.status(201).json(newBooking);
   } catch (error) {
@@ -30,6 +49,7 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // Get all bookings
@@ -85,12 +105,9 @@ const updateBookingStatus = async (req, res) => {
 
     booking.status = status;
 
-    // Assign queueLine and queueNumber only when status is 'Approved'
     if (status === 'Approved') {
-      // 1. Set queueLine
       booking.queueLine = booking.session === 'Afternoon' ? 2 : 1;
 
-      // 2. Count existing approved bookings for same date, session, department
       const existingApprovedCount = await Booking.countDocuments({
         status: 'Approved',
         date: booking.date,
@@ -98,11 +115,17 @@ const updateBookingStatus = async (req, res) => {
         department: booking.department,
       });
 
-      // 3. Set queueNumber (1-based)
       booking.queueNumber = existingApprovedCount + 1;
     }
 
     const updatedBooking = await booking.save();
+
+    // Notify the patient about status update
+    await Notification.create({
+      userId: booking.patientId,  // Patient's userId stored in booking
+      bookingId: updatedBooking._id,
+      message: `Your appointment for ${booking.department} has been ${booking.status}.`,
+    });
 
     res.status(200).json({ message: "Booking status updated", booking: updatedBooking });
   } catch (error) {

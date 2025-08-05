@@ -7,6 +7,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const dashboardRoute = require('./routes/dashboardRoute');
 const authRoute = require('./routes/authRoute');
 const uploadRoutes = require("./routes/upload");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 dotenv.config();  
 connectDB();
@@ -39,6 +40,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/dashboard', dashboardRoute); 
 app.use('/api/auth', authRoute);
 app.use("/api/uploads", uploadRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
