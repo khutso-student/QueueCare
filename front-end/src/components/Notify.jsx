@@ -1,132 +1,110 @@
-import { useEffect, useState } from "react";
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 
-export default function Notify({ token, setActiveTab }) {
+const VIEWED_KEY = "viewed_notifications";
+
+export default function Notify({ setActiveTab }) {
+  const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingIds, setLoadingIds] = useState([]);
+  const [hasNew, setHasNew] = useState(false);
+  const dropdownRef = useRef();
 
-  // ✅ Fetch notifications from server
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("https://queuecare.onrender.com/api/notifications", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-      } else {
-        console.error("Failed to fetch notifications");
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ✅ FETCH notifications from backend (Render)
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch("https://your-render-url.com/api/notifications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch notifications");
+        const data = await response.json();
+        setNotifications(data);
+
+        // Check if there are unseen notifications
+        const viewed = JSON.parse(localStorage.getItem(VIEWED_KEY)) || [];
+        const unseen = data.find((n) => !viewed.includes(n._id));
+        setHasNew(!!unseen);
+      } catch (err) {
+        console.error("Notification fetch error:", err);
+      }
+    };
+
     fetchNotifications();
   }, []);
 
-  // ✅ Mark as read
-  const handleMarkAsRead = async (id) => {
-    setLoadingIds((prev) => [...prev, id]);
-
-    try {
-      const res = await fetch(`https://queuecare.onrender.com/api/notifications/${id}/read`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        fetchNotifications();
-      } else {
-        console.error("Failed to mark as read");
-      }
-    } catch (err) {
-      console.error("Error marking as read:", err);
-    } finally {
-      setLoadingIds((prev) => prev.filter((item) => item !== id));
-    }
+  const markViewed = () => {
+    localStorage.setItem(
+      VIEWED_KEY,
+      JSON.stringify(notifications.map((n) => n._id))
+    );
+    setHasNew(false);
   };
 
-  // ✅ Delete notification
-  const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`https://queuecare.onrender.com/api/notifications/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        fetchNotifications();
-      } else {
-        console.error("Failed to delete notification");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-    }
+  const handleViewAll = () => {
+    setActiveTab("Notification");
+    markViewed();
+    setShowDropdown(false);
   };
 
-  const sortedNotifications = [...notifications].sort(
-    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-  );
+  const recentNotifications = [...notifications]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 6);
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl text-[#4e4d4d] font-semibold mb-4">All Notifications</h1>
+    <div className="relative" ref={dropdownRef}>
+      <div
+        onClick={() => {
+          setShowDropdown((prev) => !prev);
+          markViewed();
+        }}
+        className="flex justify-center items-center bg-[#bdb9b971] p-2 w-8 h-8 rounded-full hover:bg-[#979191e3] cursor-pointer relative"
+      >
+        <IoMdNotificationsOutline className="text-[#4d4949ef] text-[25px]" />
+        {hasNew && (
+          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600"></span>
+        )}
+      </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul className="space-y-3 max-h-[60vh] overflow-y-auto">
-          {sortedNotifications.length === 0 ? (
-            <li className="text-gray-500">No notifications available.</li>
+      {showDropdown && (
+        <div className="absolute right-0 mt-2 mr-[-75px] sm:mr-[-40px] w-70 border border-[#eeeeee] bg-white shadow-lg rounded-lg z-50 p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold text-gray-700">Notifications</h2>
+          </div>
+          {recentNotifications.length === 0 ? (
+            <p className="text-sm text-gray-500">No notifications.</p>
           ) : (
-            sortedNotifications.map((n) => {
-              const date = new Date(n.timestamp);
-              const isValidDate = !isNaN(date);
-              const displayDate = isValidDate ? date : new Date();
+            <ul className="max-h-80 overflow-y-auto">
+              {recentNotifications.map((n) => {
+                const date = new Date(n.createdAt);
+                const isValidDate = !isNaN(date);
+                const displayDate = isValidDate ? date : new Date();
 
-              return (
-                <li key={n._id} className="p-3 bg-white shadow rounded relative">
-                  <div className="text-sm text-gray-700">{n.message}</div>
-                  <div className="text-xs text-gray-500">
-                    {formatDistanceToNow(displayDate, { addSuffix: true })}
-                  </div>
-
-                  {!n.read && (
-                    <button
-                      onClick={() => handleMarkAsRead(n._id)}
-                      disabled={loadingIds.includes(n._id)}
-                      className="mt-2 text-sm text-blue-600 hover:underline"
-                    >
-                      {loadingIds.includes(n._id) ? "Marking..." : "Mark as Read"}
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => handleDelete(n._id)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Delete
-                  </button>
-                </li>
-              );
-            })
+                return (
+                  <li key={n._id} className="border-b border-[#ddd] py-2">
+                    <div className="text-sm text-gray-800">{n.message}</div>
+                    <div className="text-xs text-gray-500">
+                      {formatDistanceToNow(displayDate, { addSuffix: true })}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </ul>
+          <button
+            onClick={handleViewAll}
+            className="mt-3 w-full py-2 text-center bg-gray-100 hover:bg-gray-200 rounded text-sm text-gray-700"
+          >
+            View All
+          </button>
+        </div>
       )}
     </div>
   );

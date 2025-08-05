@@ -28,6 +28,9 @@ export default function MainDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
+  
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -44,13 +47,44 @@ export default function MainDashboard() {
     fetchUser();
   }, []);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: Date.now(),
-      message: "Welcome! You’ll get live updates here.",
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+
+useEffect(() => {
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(`https://queuecare.onrender.com/api/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setNotifications(data);
+      } else {
+        console.error("Failed to load notifications", data.message);
+        setNotifications([{
+          id: Date.now(),
+          message: "Welcome! You’ll get live updates here.",
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setNotifications([{
+        id: Date.now(),
+        message: "Unable to fetch notifications at the moment.",
+        createdAt: new Date().toISOString(),
+      }]);
+    }
+  };
+
+  fetchNotifications();
+}, []);
+
 
   const pushNotification = (message) => {
     const newNotification = {
@@ -111,7 +145,12 @@ export default function MainDashboard() {
         </div>
 
         <div className="flex gap-2">
-          <Notify notifications={notifications} setActiveTab={setActiveTab} token={token} />
+          <Notify notifications={notifications} 
+            setNotifications={setNotifications} 
+            setActiveTab={setActiveTab} 
+            token={token} 
+           />
+           
           <Profile setActiveTab={setActiveTab} profileImage={user?.profileImage || ""} />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -189,13 +228,20 @@ export default function MainDashboard() {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === 'Dashboard' && <Dashboard />}
-          {activeTab === 'Notification' && <Notification notifications={notifications} />}
-          {activeTab === 'BookAppointments' && <BookAppointments pushNotification={pushNotification} />}
-          {activeTab === 'BookingStatus' && <BookingStatus />}
-          {activeTab === 'MyProfile' && <MyProfile />}
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === 'Dashboard' && <Dashboard />}
+            {activeTab === 'Notification' && (
+              <Notification
+                notifications={notifications}
+                fetchNotifications={fetchNotifications}
+                token={token}
+              />
+            )}
+            {activeTab === 'BookAppointments' && <BookAppointments pushNotification={pushNotification} />}
+            {activeTab === 'BookingStatus' && <BookingStatus />}
+            {activeTab === 'MyProfile' && <MyProfile />}
         </div>
+
       </div>
     </div>
   );
