@@ -69,7 +69,8 @@ const createBooking = async (req, res) => {
       status: "Pending",
       createdBy: req.user._id,
       doctorId: doctor._id, // Save doctorId in booking for reference
-      patientId: req.user._id, // Save patientId (creator) in booking
+      patientId: req.user._id,
+      user: req.user._id, // Save patientId (creator) in booking
     });
 
     await newBooking.save();
