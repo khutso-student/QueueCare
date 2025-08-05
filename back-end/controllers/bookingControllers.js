@@ -35,16 +35,32 @@ const createBooking = async (req, res) => {
 // Get all bookings
 const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
-      .sort({ createdAt: -1 })
-      .populate("createdBy", "name email");
-      console.log("Bookings fetched:", bookings.map(b => ({ id: b._id, date: b.date })));
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let bookings;
+
+    if (userRole === "doctor" || userRole === "admin") {
+      // Admins or doctors see all bookings
+      bookings = await Booking.find()
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email");
+    } else if (userRole === 'patient') {
+      // Patients see only their own bookings
+      bookings = await Booking.find({ createdBy: userId })
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email");
+    } else {
+      return res.status(403).json({ message: "Unauthorized role" });
+    }
 
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch bookings" });
   }
 };
+
+
 
 // Get booking by ID
 const getBookingById = async (req, res) => {
