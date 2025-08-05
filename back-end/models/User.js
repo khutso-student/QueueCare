@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true }, // ✅ fixed typo here
   role: { type: String, enum: ["doctor", "patient"], default: "patient" },
+  department: { type: String },  // Add this
 
   resetToken: { type: String, default: null },
   resetTokenExpiry: { type: Date, default: null },
