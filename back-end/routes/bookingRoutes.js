@@ -6,20 +6,17 @@ const {
   updateBookingStatus,
   updateBooking,
   deleteBooking,
-} = require('../controllers/bookingControllers')
+} = require('../controllers/bookingControllers');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-
 router.post('/', protect, createBooking);
-router.get("/bookings", protect, getAllBookings);
-router.get("/admin/bookings", protect, authorize("doctor"), getAllBookings);
+router.get('/', protect, getAllBookings); // ✅ fixed path
+router.get('/admin', protect, authorize('doctor'), getAllBookings); // also simplified
 router.get('/:id', protect, getBookingById);
-router.put('/:id', protect, updateBooking); 
+router.put('/:id', protect, updateBooking);
 router.put('/:id/status', protect, updateBookingStatus);
 router.delete('/:id', protect, deleteBooking);
-
-
 
 module.exports = router;
