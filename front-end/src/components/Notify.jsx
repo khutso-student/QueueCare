@@ -17,7 +17,7 @@ export default function Notify({ setActiveTab }) {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch("https://your-render-url.com/api/notifications", {
+        const response = await fetch("https://queuecare.onrender.com/api/notifications", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
