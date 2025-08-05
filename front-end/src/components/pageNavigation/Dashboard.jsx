@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDashboardData } from '../../services/bookingAPI';
+import { getDashboardData } from '../../services/bookingAPI'; // ✅ NEW import
 import SystemGraph from '../SystemGraph';
 
 import { LuLayoutList } from "react-icons/lu";
@@ -12,7 +12,48 @@ import { FaUserMd, FaUser } from "react-icons/fa";
 import { RiUserShared2Line } from "react-icons/ri";
 import { BsGraphDown } from "react-icons/bs";
 
-// ... StatCard, UserCard, activityIconMap, statusBadgeColors remain unchanged ...
+const StatCard = ({ icon, label, value, bgColor, iconColor }) => (
+  <div className="flex flex-col justify-center items-center gap-2 bg-white border border-[#D9D2D2] hover:shadow-sm rounded-lg w-full sm:w-1/2 lg:w-[23%] py-3 px-2">
+    <div style={{ backgroundColor: bgColor }} className="p-3 rounded-full">
+      <div style={{ color: iconColor }} className="text-[20px]">
+        {icon}
+      </div>
+    </div>
+    <p className="text-xs text-[#979191] text-center">{label}</p>
+    <h1 className="text-[#686161] font-bold">{value}</h1>
+  </div>
+);
+
+const UserCard = ({ icon, label, value, bgColor, iconColor, lineChat }) => (
+  <div className="flex items-center gap-3 bg-white w-full rounded border border-[#e4e4e4] hover:shadow-sm mb-2 p-3 ">
+    <div style={{ backgroundColor: bgColor }} className="p-3 rounded-full">
+      <div style={{ color: iconColor }} className="text-[20px]">
+        {icon}
+      </div>
+    </div>
+    <div className="flex-1">
+      <p className="text-xs text-[#979191]">{label}</p>
+      <div className="flex items-center gap-2">
+        <h1 className="text-[#686161] font-bold">{value}</h1>
+        <div>{lineChat}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const activityIconMap = {
+  approved: <TiTick className="text-green-500" />,
+  pending: <FaUserClock className="text-[#1FBEC3]" />,
+  rejected: <MdOutlineCancel className="text-red-500" />,
+  booked: <RiUserShared2Line className="text-[#1FBEC3]" />,
+};
+
+const statusBadgeColors = {
+  Approved: { bg: 'bg-green-100', text: 'text-green-600' },
+  Pending: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+  Rejected: { bg: 'bg-red-100', text: 'text-red-600' },
+  Cancelled: { bg: 'bg-red-100', text: 'text-red-600' },
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -25,6 +66,7 @@ export default function Dashboard() {
     recentActivities: [],
     upcomingAppointments: [],
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -33,11 +75,11 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const dashboardData = await getDashboardData();
+        const dashboardData = await getDashboardData(); // ✅ using service
         setStats(dashboardData);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
-        setError('Failed to load dashboard data. Please try again later.');
+        setError('Failed to load dashboard data.');
       } finally {
         setLoading(false);
       }
@@ -48,17 +90,26 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-full w-full">
-        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-        {/* Simple spinner, you can replace with any spinner component or CSS */}
+      <div className="flex justify-center items-center h-full">
+        <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+        <style>{`
+          .loader {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-full w-full p-4">
-        <p className="text-red-500 font-semibold">{error}</p>
+      <div className="text-center text-red-500 mt-10 font-semibold">
+        {error}
       </div>
     );
   }
