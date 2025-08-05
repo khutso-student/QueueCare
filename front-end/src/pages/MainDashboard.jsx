@@ -47,11 +47,8 @@ export default function MainDashboard() {
     fetchUser();
   }, []);
 
-
-useEffect(() => {
-  const fetchNotifications = async () => {
+    const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (!token) return;
 
       const res = await fetch(`https://queuecare.onrender.com/api/notifications`, {
@@ -82,9 +79,23 @@ useEffect(() => {
     }
   };
 
-  fetchNotifications();
-}, []);
 
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        if (!token) return;
+
+        const res = await api.get('/auth/me');
+        setUser(res.data);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+
+    fetchUser();
+    fetchNotifications();  // call it here on mount
+  }, [token]);
 
   const pushNotification = (message) => {
     const newNotification = {
