@@ -2,23 +2,39 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const { protect } = require('../middleware/auth');
 
 // GET /api/dashboard
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
-    const totalAppointments = await Booking.countDocuments();
-    const approved = await Booking.countDocuments({ status: 'Approved' });
-    const pending = await Booking.countDocuments({ status: 'Pending' });
-    const rejected = await Booking.countDocuments({ status: 'Rejected' });
+    const isDoctor = req.user.role === 'doctor';
 
+    // Build filter condition for bookings
+    const bookingFilter = isDoctor
+      ? {} // no filter, get all bookings
+      : { email: req.user.email }; // patients get only their bookings
+
+    // Total appointments count filtered by user role
+    const totalAppointments = await Booking.countDocuments(bookingFilter);
+
+    // Count by status filtered
+    const approved = await Booking.countDocuments({ ...bookingFilter, status: 'Approved' });
+    const pending = await Booking.countDocuments({ ...bookingFilter, status: 'Pending' });
+    const rejected = await Booking.countDocuments({ ...bookingFilter, status: 'Rejected' });
+
+    // Total doctors & patients are site-wide stats, no filter needed
     const totalDoctors = await User.countDocuments({ role: 'doctor' });
     const totalPatients = await User.countDocuments({ role: 'patient' });
 
-    // Upcoming appointments: only those on or after today, sorted ascending by date
-    const upcomingAppointments = await Booking.find({ date: { $gte: new Date() } })
+    // Upcoming appointments filtered and sorted
+    const upcomingAppointments = await Booking.find({
+      ...bookingFilter,
+      date: { $gte: new Date() }
+    })
       .sort({ date: 1 })
       .limit(3);
 
+    // Recent activities based on upcomingAppointments
     const recentActivities = upcomingAppointments.map((appt) => {
       let icon = 'booked';
       if (appt.status === 'Approved') icon = 'approved';
@@ -32,12 +48,15 @@ router.get('/', async (req, res) => {
       };
     });
 
+    // You can calculate totalQueues dynamically if needed; for now keep static
+    const totalQueues = 4;
+
     res.json({
       totalAppointments,
       approved,
-      pending,         // <-- added this here
+      pending,
       rejected,
-      totalQueues: 4,  // You can calculate dynamically if needed
+      totalQueues,
       totalDoctors,
       totalPatients,
       recentActivities,
@@ -48,6 +67,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Dashboard data fetch failed' });
   }
 });
+
 
 // Helper to convert timestamps into "x mins ago"
 function timeAgo(date) {
@@ -63,22 +83,24 @@ function timeAgo(date) {
 
 const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-router.get('/weekly-appointments', async (req, res) => {
+router.get('/weekly-appointments', protect, async (req, res) => {
   try {
-    // Get today's date and last 6 days for a week
+    const isDoctor = req.user.role === 'doctor';
+    const bookingFilter = isDoctor ? {} : { email: req.user.email };
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Aggregate bookings by day of week for last 7 days
     const pipeline = [
       {
         $match: {
+          ...bookingFilter,
           createdAt: { $gte: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000) }, // last 7 days
         },
       },
       {
         $group: {
-          _id: { $dayOfWeek: '$createdAt' }, // 1=Sun, 2=Mon, ...
+          _id: { $dayOfWeek: '$createdAt' },
           count: { $sum: 1 },
         },
       },
@@ -86,12 +108,9 @@ router.get('/weekly-appointments', async (req, res) => {
 
     const aggResult = await Booking.aggregate(pipeline);
 
-    // Convert MongoDB $dayOfWeek (1=Sun) to day short names & build data array
-    // Initialize all days with 0
     const data = daysShort.map((day) => ({ day, appointments: 0 }));
 
     aggResult.forEach((item) => {
-      // MongoDB dayOfWeek: 1=Sun, so map index
       const index = item._id - 1;
       if (index >= 0 && index < data.length) {
         data[index].appointments = item.count;
@@ -104,6 +123,7 @@ router.get('/weekly-appointments', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch weekly appointments' });
   }
 });
+
 
 
 module.exports = router;
