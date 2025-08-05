@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api'
 
+
 import Logo from '../assets/Logo.svg';
 import LogoIcon from '../assets/Icon.svg';
 import Notify from '../components/Notify';
@@ -20,6 +21,8 @@ import { LiaUserCogSolid } from "react-icons/lia";
 import { IoIosLogOut } from "react-icons/io";
 import { SlMenu } from "react-icons/sl";
 import { Link } from 'react-router-dom';
+
+const token = localStorage.getItem("token");
 
 export default function MainDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -108,7 +111,7 @@ export default function MainDashboard() {
         </div>
 
         <div className="flex gap-2">
-          <Notify notifications={notifications} setActiveTab={setActiveTab} token={yourJwtToken} />
+          <Notify notifications={notifications} setActiveTab={setActiveTab} token={token} />
           <Profile setActiveTab={setActiveTab} profileImage={user?.profileImage || ""} />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
