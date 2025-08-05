@@ -108,7 +108,7 @@ export default function MainDashboard() {
         </div>
 
         <div className="flex gap-2">
-          <Notify notifications={notifications} setActiveTab={setActiveTab} />
+          <Notify notifications={notifications} setActiveTab={setActiveTab} token={yourJwtToken} />
           <Profile setActiveTab={setActiveTab} profileImage={user?.profileImage || ""} />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

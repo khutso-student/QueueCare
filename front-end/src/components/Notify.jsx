@@ -2,9 +2,10 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 
-export default function Notify({ notifications, setActiveTab }) {
+export default function Notify({ notifications = [], setActiveTab, token }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasNew, setHasNew] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const dropdownRef = useRef();
 
   // Helper to mark notification as read on server
@@ -13,7 +14,10 @@ export default function Notify({ notifications, setActiveTab }) {
       await fetch(`https://queuecare.onrender.com/api/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
     } catch (error) {
       console.error("Failed to mark notification as read", error);
@@ -22,11 +26,9 @@ export default function Notify({ notifications, setActiveTab }) {
 
   // Mark all notifications in the list as read on the backend & locally
   const markAllAsRead = async () => {
-    // Mark all unread notifications as read on backend
     const unread = notifications.filter((n) => !n.read);
     await Promise.all(unread.map((n) => markNotificationRead(n._id)));
 
-    // Update localStorage
     localStorage.setItem(
       "viewed_notifications",
       JSON.stringify(notifications.map((n) => n._id))
@@ -34,14 +36,61 @@ export default function Notify({ notifications, setActiveTab }) {
     setHasNew(false);
   };
 
+  // Clear all notifications on backend and refetch or update UI accordingly
+  const clearAllNotifications = async () => {
+    if (!token) {
+      console.error("Auth token missing: cannot clear notifications.");
+      return;
+    }
+
+    setClearing(true);
+    try {
+      const res = await fetch(`https://queuecare.onrender.com/api/notifications`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to clear notifications");
+      }
+
+      // Clear localStorage as well
+      localStorage.removeItem("viewed_notifications");
+
+      // Optionally, trigger full refresh or you can handle this via prop
+      window.location.reload(); // or call a prop fetchNotifications()
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  // Outside click detection to close dropdown
   useEffect(() => {
-    // Check if any notifications are unread and update hasNew accordingly
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
+  useEffect(() => {
     const viewed = localStorage.getItem("viewed_notifications");
     let viewedIds = [];
     if (viewed) {
       viewedIds = JSON.parse(viewed);
     }
-    // Also consider server read status
     const unseen = notifications.find(
       (n) => !viewedIds.includes(n._id) && !n.read
     );
@@ -81,7 +130,14 @@ export default function Notify({ notifications, setActiveTab }) {
         <div className="absolute right-0 mt-2 mr-[-75px] sm:mr-[-40px] w-70 border border-[#eeeeee] bg-white shadow-lg rounded-lg z-50 p-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="font-semibold text-gray-700">Notifications</h2>
-            {/* Optional: Add Clear All button here */}
+            <button
+              onClick={clearAllNotifications}
+              disabled={clearing}
+              className="text-sm text-red-600 hover:underline"
+              title="Clear all notifications"
+            >
+              {clearing ? "Clearing..." : "Clear All"}
+            </button>
           </div>
           {recentNotifications.length === 0 ? (
             <p className="text-sm text-gray-500">No notifications.</p>
