@@ -29,9 +29,10 @@ const validDepartments = [
 
 const isValidDepartment = (department) => validDepartments.includes(department);
 
-const getDoctorByDepartment = async (department) => {
-  return await User.findOne({ role: "doctor", department });
+const getDoctorByDepartment = async () => {
+  return await User.findOne({ role: "doctor" });
 };
+
 
 // Create a booking
 const createBooking = async (req, res) => {
@@ -55,7 +56,7 @@ const createBooking = async (req, res) => {
     }
 
     // Find doctor by department
-    const doctor = await getDoctorByDepartment(department);
+    const doctor = await getDoctorByDepartment();
     if (!doctor) {
       return res.status(400).json({ message: "Doctor not found for this department" });
     }
