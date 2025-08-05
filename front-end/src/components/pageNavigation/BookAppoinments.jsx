@@ -49,6 +49,30 @@ const formatDate = (dateString) => {
   });
 };
 
+const Spinner = () => (
+  <svg
+    className="animate-spin h-4 w-4 text-white mx-auto"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+    />
+  </svg>
+);
+
+
 
 export default function BookAppointments({ pushNotification }) {
   const [showBook, setShowBook] = useState(false);
@@ -69,6 +93,12 @@ export default function BookAppointments({ pushNotification }) {
   const { user } = useContext(AuthContext);
   const isDoctor = user?.role === "doctor";
   const isPatient = user?.role === "patient";
+
+  const [isBooking, setIsBooking] = useState(false); // For submit button
+  const [loadingStatusId, setLoadingStatusId] = useState(null); // Booking ID whose Accept/Reject button is loading
+  const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+
+
 
   useEffect(() => {
     fetchBookings();
@@ -130,6 +160,7 @@ export default function BookAppointments({ pushNotification }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsBooking(true);
     try {
       if (editBooking) {
         if (isPatient && editBooking.email !== user.email) {
@@ -159,19 +190,25 @@ export default function BookAppointments({ pushNotification }) {
       fetchBookings();
     } catch (err) {
       console.error("Booking failed", err);
-    }
+    }  finally {
+    setIsBooking(false);
+  }
+
   };
 
 
   const handleStatusChange = async (id, status) => {
     if (!isDoctor) return alert("Only doctors can update status.");
+     setLoadingDeleteId(id);
     try {
       await updateBookingStatus(id, { status });  // <-- fixed here
       fetchBookings();
       pushNotification(`Appointment status changed to ${status}`);
     } catch (err) {
       console.error("Error updating status", err);
-    }
+    }  finally {
+    setLoadingDeleteId(null);
+  }
   };
 
   const handleDelete = async (id) => {
@@ -320,31 +357,43 @@ export default function BookAppointments({ pushNotification }) {
                 <div className="flex justify-end items-center gap-2">
                     {isDoctor && booking.status === "Pending" && (
                     <>
-                        <button
+                     <button
                         onClick={() => handleStatusChange(booking._id, "Approved")}
-                        className="text-sm text-green-600 hover:underline"
+                        disabled={loadingStatusId === booking._id}
+                        className={`text-sm text-green-600 hover:underline flex items-center ${
+                          loadingStatusId === booking._id ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                         title="Accept Appointment"
-                        >
-                        Accept
-                        </button>
+                      >
+                        {loadingStatusId === booking._id ? <Spinner /> : "Accept"}
+                    </button>
+
                         <button
-                        onClick={() => handleStatusChange(booking._id, "Rejected")}
-                        className="text-sm text-red-600 hover:underline"
-                        title="Reject Appointment"
+                          onClick={() => handleStatusChange(booking._id, "Rejected")}
+                          disabled={loadingStatusId === booking._id}
+                          className={`text-sm text-red-600 hover:underline flex items-center ${
+                            loadingStatusId === booking._id ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                          title="Reject Appointment"
                         >
-                        Reject
+                          {loadingStatusId === booking._id ? <Spinner /> : "Reject"}
                         </button>
+
                     </>
                     )}
 
                     {isDoctor && (
-                    <button
-                        onClick={() => handleDelete(booking._id)}
-                        className="text-sm bg-red-200 hover:bg-red-300 p-1 rounded-full text-red-400 hover:text-red-600 cursor-pointer duration-300"
-                        title="Delete Appointment"
-                    >
-                        <MdDelete />
-                    </button>
+                        <button
+                          onClick={() => handleDelete(booking._id)}
+                          disabled={loadingDeleteId === booking._id}
+                          className={`text-md bg-red-200 hover:bg-red-300 p-1 rounded-full text-red-400 hover:text-red-600 cursor-pointer duration-300 flex justify-center items-center ${
+                            loadingDeleteId === booking._id ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                          title="Delete Appointment"
+                        >
+                          {loadingDeleteId === booking._id ? <Spinner /> : <MdDelete />}
+                        </button>
+
                     )}
 
                     {isPatient && booking.email === user.email && (
@@ -457,9 +506,12 @@ export default function BookAppointments({ pushNotification }) {
               />
               <button
                 type="submit"
-                className="bg-[#1FBEC3] hover:bg-[#069094] text-white text-sm font-bold p-2 rounded-md"
+                disabled={isBooking}
+                className={`bg-[#1FBEC3] hover:bg-[#069094] text-white text-sm font-bold p-2 rounded-md flex justify-center items-center ${
+                  isBooking ? "opacity-70 cursor-not-allowed" : ""
+                }`}
               >
-                {editBooking ? "Update Appointment" : "Submit Booking"}
+                {isBooking ? <Spinner /> : (editBooking ? "Update Appointment" : "Submit Booking")}
               </button>
             </form>
           </div>
