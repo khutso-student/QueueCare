@@ -1,15 +1,14 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const userRoutes = require('./routes/userRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const dashboardRoute = require('./routes/dashboardRoute');
-const authRoute = require('./routes/authRoute');
-const uploadRoutes = require("./routes/upload");
-const notificationRoutes = require("./routes/notificationRoutes");
 
-dotenv.config();  
+// Dynamically load the correct .env file
+const envFile = process.env.NODE_ENV === 'production' ? '.env' : '.env.development';
+dotenv.config({ path: path.resolve(__dirname, envFile) });
+
+// Connect to MongoDB
 connectDB();
 
 const allowedOrigins = [
@@ -19,28 +18,34 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      const msg = `❌ CORS policy does not allow access from: ${origin}`;
       return callback(new Error(msg), false);
     }
-    return callback(null, true);
   },
   credentials: true,
 };
 
 const app = express();
 
+// Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/dashboard', dashboardRoute); 
-app.use('/api/auth', authRoute);
-app.use("/api/uploads", uploadRoutes);
-app.use('/api/notifications', notificationRoutes);
+// Routes
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoute'));
+app.use('/api/auth', require('./routes/authRoute'));
+app.use('/api/uploads', require('./routes/upload'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
+// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+});

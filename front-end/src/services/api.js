@@ -2,13 +2,11 @@ import axios from "axios";
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.PROD
-    ? import.meta.env.VITE_API_URL
-    : import.meta.env.VITE_API_URL_LOCAL,
+  baseURL: import.meta.env.VITE_API_URL, // Always use this, Vite picks correct env automatically
   withCredentials: true,
 });
 
-console.log("API base URL:", import.meta.env.PROD ? import.meta.env.VITE_API_URL : import.meta.env.VITE_API_URL_LOCAL);
+console.log("API base URL:", import.meta.env.VITE_API_URL);
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
